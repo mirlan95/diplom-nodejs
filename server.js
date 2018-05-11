@@ -38,7 +38,7 @@ app.get('/', function (req, res) {
  		console.log(req.params.username);
  	if(!exam_id || !username || !password){    
  		
- 		return res.status(400).send({ error:true, message: 'Please provide task'});
+ 		return res.status(400).send({ error:true, message: 'Please provide tas'});
     }
 
     mc.query('select student_id from tester_students where number=?',username,function(error,result,fields){
@@ -57,7 +57,7 @@ app.get('/', function (req, res) {
  					return res.send({success:false});
  				}
  				else {
- 					return res.send({miki:miki});
+ 					return res.send({miki:mik});
  				}
  			});
  		}
