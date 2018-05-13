@@ -25,7 +25,7 @@ app.get('/', function (req, res) {
  //get themes from tester_exams table
  app.get('/themes', function(req,res){
  	mc.query('select * from tester_exams', function(error, results, fields){
- 		if(error) throw error;
+ 		if(error) res.status(400).send({ error:true, message: 'error'});;
  		return res.send({error : false ,data: results, message : 'themes list'});
  	});
  });
@@ -35,7 +35,7 @@ app.get('/', function (req, res) {
  	var exam_id = req.body.exam_id;	
  	var student_id;
 
- 	if(!exam_id || !username || !password){    //
+ 	if(!exam_id || !username || !password){    
  		return res.status(400).send({ error:true, message: 'error'});
     }
 
