@@ -29,13 +29,13 @@ app.get('/', function (req, res) {
  		return res.send({error : false ,data: results, message : 'themes list'});
  	});
  });
- app.post('/ques', function(req, res){
+ app.post('/questions', function(req, res){
  	var username = req.body.username;
  	var password = req.body.password;
  	var exam_id = req.body.exam_id;	
  	var student_id;
 
- 	if(!exam_id || !username || !password){    
+ 	if(!exam_id || !username || !password){    //
  		return res.status(400).send({ error:true, message: 'error'});
     }
 
