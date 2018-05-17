@@ -17,31 +17,32 @@ const mc = mysql.createConnection({
 });
 //connect to database 
 mc.connect();
-
+var question_id_array = [];
 // default route
 app.get('/', function (req, res) {
     return res.send({ error: true, message: 'hello' })
 });
  //get themes from tester_exams table
- app.get('/themes', function(req,res){
+app.get('/exams', function(req,res){
  	mc.query('select * from tester_exams', function(error, results, fields){
- 		if(error) res.status(400).send({ error:true, message: 'error'});;
- 		return res.send({error : false ,data: results, message : 'themes list'});
+ 	      if(error) return res.status(400).send({ error:true, message: 'error'});;
+ 	      return res.send({results});
  	});
  });
- app.post('/questions', function(req, res){
- 	var username = req.body.username;
+ 
+app.post('/questions', function(req, res){
+    var username = req.body.username;
  	var password = req.body.password;
  	var exam_id = req.body.exam_id;	
  	var student_id;
 
- 	if(!exam_id || !username || !password){    
+        if(!exam_id || !username || !password){    
  		return res.status(400).send({ error:true, message: 'error'});
-    }
+        }
 
     mc.query('select student_id from tester_students where number=?',username,function(error,result,fields){
-    	if(error)return res.status(400).send({ error:true, message: 'error'});;
-    	 student_id = result[0].student_id;
+        if(error)return res.status(400).send({ error:true, message: 'error'});;
+        student_id = result[0].student_id;
     	
     });
 
@@ -60,6 +61,7 @@ app.get('/', function (req, res) {
                             if (error) return res.status(400).send({error: true, message: error});
                             var query = "";
                             var attrs =  [];
+                            
                             for (var i = 0; i < result.length; i++) {
                                 //console.log(result);
                                 var levels = [result[i].simple_count, result[i].normal_count, result[i].hard_count]
@@ -72,8 +74,6 @@ app.get('/', function (req, res) {
                             }
                             mc.query(query, attrs, function(error, result, fields){
                                 if (error) return res.status(400).send({error: true, message: error});
-                                //console.log(fields);
-                                //console.log(result);
                                 return res.send({result});
                             });
                         }
@@ -87,6 +87,16 @@ app.get('/', function (req, res) {
  		
  	});
  	
+ });
+app.get('/answers', function(req,res){
+    var arr = [];
+    arr = req.query.arr.slice();
+    mc.query('select * from tester_answers where question_id = ?',arr,function(error, result, fields){
+
+    if(error)return res.status(400).send({ error:true, message: 'error'});;
+    return res.send({result});     
+    });
+   
  });
 
 // port must be set to 8080 because incoming http requests are routed from port 80 to port 8080
