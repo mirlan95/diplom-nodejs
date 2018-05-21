@@ -98,6 +98,17 @@ app.get('/answers', function(req,res){
     });
    
  });
+app.post("/result",function(req, res){
+    var result = req.body.result;
+    var student_id = req.body.student_id;
+    var exam_id = req.body.exam_id;
+    
+    console.log(result);
+    mc.query('UPDATE tester_examresults SET result = ? WHERE student_id = ? AND exam_id = ?',[result,student_id,exam_id], function(error,result,fields){
+        if(error)return res.status(400).send({error:true, message: 'error'});
+        return res.status(200).send({message: 'success!'});
+    });
+});
 
 // port must be set to 8080 because incoming http requests are routed from port 80 to port 8080
 app.listen(8080, function () {
