@@ -103,7 +103,7 @@ app.post("/result",function(req, res){
     var student_id = req.body.student_id;
     var exam_id = req.body.exam_id;
     
-    console.log(result);
+    //console.log(result);
     mc.query('UPDATE tester_examresults SET result = ? WHERE student_id = ? AND exam_id = ?',[result,student_id,exam_id], function(error,result,fields){
         if(error)return res.status(400).send({error:true, message: 'error'});
         return res.status(200).send({message: 'success!'});
