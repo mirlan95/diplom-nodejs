@@ -1,7 +1,6 @@
 {
   "name": "diplom",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,7 +11,7 @@
     "heroku",
     "express"
   ],
-  "author": "",
+  "author": "mirlan",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -20,6 +19,15 @@
     "mysql": "^2.15.0"
   },
   "devDependencies": {
-    "nodemon": "^1.17.4"
-  }
+    "nodemon": "^1.17.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mirlan95/diplom-nodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mirlan95/diplom-nodejs/issues"
+  },
+  "homepage": "https://github.com/mirlan95/diplom-nodejs#readme",
+  "description": ""
 }
