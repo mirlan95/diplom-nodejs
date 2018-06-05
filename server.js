@@ -2,22 +2,22 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
- 
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
  
- // connection configurations
+  //connection configurations
 const mc = mysql.createConnection({
     host: 'localhost',
-    user: 'root',
-    password: '12345',
-    database: 'diplomka'
+    user: 'dbadmin',
+    password: '123456',
+    database: 'diplom'
 });
 //connect to database 
-mc.connect();
-var question_id_array = [];
+//mc.connect();
+
 // default route
 app.get('/', function (req, res) {
     return res.send({ error: true, message: 'hello' })
@@ -26,75 +26,95 @@ app.get('/', function (req, res) {
 app.get('/exams', function(req,res){
  	mc.query('select * from tester_exams', function(error, results, fields){
  	      if(error) return res.status(400).send({ error:true, message: 'error'});;
- 	      return res.send({results});
+ 	      return res.send(results);
  	});
  });
  
-app.post('/questions', function(req, res){
-    var username = req.body.username;
- 	var password = req.body.password;
- 	var exam_id = req.body.exam_id;	
- 	var student_id;
-
-        if(!exam_id || !username || !password){    
- 		return res.status(400).send({ error:true, message: 'error'});
+app.get('/questions', function(req, res){
+    var exam_id = req.query.exam_id;	
+    var themes = [];
+    console.log(exam_id);
+    mc.query('select theme_id, simple_count, normal_count, hard_count from tester_examthemes where exam_id  = ? ', exam_id,function(error, result, fields) {
+        if (error){
+            return res.status(400).send({error: true, message: 'error_simple_count'});
+        }   
+        var query = "";
+        var attrs =  [];
+        for (var i = 0; i < result.length; i++) {
+            var levels = [result[i].simple_count, result[i].normal_count, result[i].hard_count]
+                for (var j = 0; j < 3; j++){
+                    if (i > 0 || j > 0) query += " UNION";
+                    query += " (SELECT * FROM tester_questions WHERE theme_id = ? AND level = " + (j) + " ORDER BY RAND() LIMIT ?)";                        attrs.push(result[i].theme_id)
+                    attrs.push(levels[j])
+                }
         }
-
-    mc.query('select student_id from tester_students where number=?',username,function(error,result,fields){
-        if(error)return res.status(400).send({ error:true, message: 'error'});;
-        student_id = result[0].student_id;
-    	
+        mc.query(query, attrs, function(error, result, fields){
+            if (error || result == undefined) return res.status(400).send({error: true, message: error});
+                return res.send(result);
+            });
     });
 
- 	mc.query('SELECT password from tester_exampasswords where exam_id = ? AND student_id = (SELECT student_id from tester_students where number= ?)', [exam_id,username], function(error, results, fields){
- 		if(error)return res.status(400).send({ error:true, message: 'error'});;
- 		
- 		if(results!=0 && results[0].password==password){
- 		
- 			mc.query('select result from tester_examresults where exam_id = ? AND student_id = ?',[exam_id,student_id],function(error,result,fields){
- 				if(error)return res.status(400).send({ error:true, message: 'error'});;
- 				
- 				if(result[0].result){//for testing <= if(!result[0].result)
-                   // console.log(result[0].result);
-                    var themes = [];
-                    mc.query('select theme_id, simple_count, normal_count, hard_count from tester_examthemes where exam_id  = ? ', exam_id,function(error, result, fields) {
-                            if (error) return res.status(400).send({error: true, message: error});
-                            var query = "";
-                            var attrs =  [];
-                            
-                            for (var i = 0; i < result.length; i++) {
-                                //console.log(result);
-                                var levels = [result[i].simple_count, result[i].normal_count, result[i].hard_count]
-                                for (var j = 0; j < 3; j++){
-                                    if (i > 0 || j > 0) query += " UNION";
-                                    query += " (SELECT * FROM tester_questions WHERE theme_id = ? AND level = " + (j + 1) + " ORDER BY RAND() LIMIT ?)";
-                                    attrs.push(result[i].theme_id)
-                                    attrs.push(levels[j])
-                                }
-                            }
-                            mc.query(query, attrs, function(error, result, fields){
-                                if (error) return res.status(400).send({error: true, message: error});
-                                return res.send({result});
-                            });
+});        
+app.post('/login',function(req,res){
+    var username = req.body.username;
+ 	var password = req.body.password;
+    var exam_id = req.body.exam_id;
+    var is_user = false;
+    //console.log(username,exam_id);
+    mc.query('select number from tester_students',function(err,result){  
+        if(err) return res.sendStatus(400);
+        for(var i = 0; i < result.length; i++){ 
+            if(username == result[i].number){
+                var is_user = true;
+            }
+        }
+        if(is_user){
+            var is_exam = false;
+            mc.query('select exam_id from tester_exams',function(err,r){  
+                if(err) return res.status(400).send({ error:true, message: 'error_exam'});
+                for(var i = 0; i < r.length; i++){ 
+                    if(exam_id == r[i].exam_id){
+                        var is_exam = true;
+                    }
+                }
+                console.log(is_user);
+                if(is_exam){
+                    var query_password = 'SELECT password from tester_exampasswords where exam_id = ? AND student_id = (SELECT student_id from tester_students where number= ?)';
+                    mc.query(query_password, [exam_id,username], function(error, results, fields){
+                        console.log(results);
+                        if(error || results.length == 0){
+                            return res.status(400).send({ error:true, message: 'error_password'});
                         }
-                        );
- 				}else {
- 					return res.send({error:true,message: 'you are finished'});
- 				}
-
- 			});
- 		}
- 		
- 	});
- 	
- });
+                        else if(results[0].password == password){
+                                var q = 'select result from tester_examresults where exam_id = ? AND student_id = (SELECT student_id from tester_students where number= ?)';
+                                mc.query(q,[exam_id,username],function(error,result){
+                                //  console.log(result[0].result); 
+                                    if(error || result[0].result == undefined)return res.status(400).send({ error:true, message: 'error_result'});
+                                    //console.log(result[0].result);
+                                    if(!result[0].result) return res.status(200).send({ error:false, message: 'success!'});
+                                });
+                            }
+                        else {
+                            return res.status(400).send({ error:true, message: 'error_pass'});
+                        }
+                        });
+                }else {
+                    return res.status(400).send({ error:true, message: 'error_isexam'});  
+                }
+            });
+            
+        }else {
+            return res.status(400).send({ error:true, message: 'error_isuser'});
+        }
+    });
+});
 app.get('/answers', function(req,res){
     var arr = [];
     arr = req.query.arr.slice();
-    mc.query('select * from tester_answers where question_id = ?',arr,function(error, result, fields){
+    mc.query('select * from tester_answers where question_id IN (' + arr.join() + ')',function(error, result, fields){
 
     if(error)return res.status(400).send({ error:true, message: 'error'});;
-    return res.send({result});     
+    return res.send(result);     
     });
    
  });
